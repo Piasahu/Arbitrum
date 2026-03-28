@@ -1,0 +1,2893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arbitrum Strategic Dashboard</title>
+  <style>
+    :root {
+      --bg: #050813;
+      --bg-deep: #091120;
+      --bg-soft: #0d1830;
+      --panel: rgba(8, 17, 34, 0.82);
+      --panel-strong: rgba(9, 20, 42, 0.94);
+      --panel-soft: rgba(13, 29, 57, 0.72);
+      --line: rgba(141, 188, 255, 0.18);
+      --line-strong: rgba(112, 198, 255, 0.42);
+      --text: #eaf6ff;
+      --muted: #94a8cb;
+      --blue: #2ba7ff;
+      --cyan: #78e6ff;
+      --indigo: #4b66ff;
+      --ice: #cfeeff;
+      --amber: #ffb86b;
+      --mint: #8effd1;
+      --shadow: 0 30px 90px rgba(1, 10, 24, 0.48);
+      --radius-xl: 32px;
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --radius-sm: 14px;
+      --max-width: 1280px;
+      --display: "Space Grotesk", "Avenir Next", "Trebuchet MS", sans-serif;
+      --sans: "Manrope", "Avenir Next", "Segoe UI", sans-serif;
+      --mono: "JetBrains Mono", "SFMono-Regular", "Menlo", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: var(--sans);
+      background:
+        radial-gradient(circle at 12% 18%, rgba(43, 167, 255, 0.18), transparent 28%),
+        radial-gradient(circle at 88% 12%, rgba(120, 230, 255, 0.16), transparent 22%),
+        radial-gradient(circle at 72% 82%, rgba(75, 102, 255, 0.16), transparent 26%),
+        linear-gradient(180deg, #050813 0%, #07101e 32%, #09162b 100%);
+      overflow-x: hidden;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: auto;
+      width: 34rem;
+      height: 34rem;
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(52px);
+      opacity: 0.38;
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+
+    body::before {
+      top: -10rem;
+      right: -8rem;
+      background: rgba(43, 167, 255, 0.24);
+    }
+
+    body::after {
+      left: -9rem;
+      bottom: -10rem;
+      background: rgba(75, 102, 255, 0.24);
+      animation-duration: 23s;
+    }
+
+    a {
+      color: var(--cyan);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    body[data-lang="en"] .lang-es {
+      display: none !important;
+    }
+
+    body[data-lang="es"] .lang-en {
+      display: none !important;
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      width: min(var(--max-width), calc(100% - 1.4rem));
+      margin: 0 auto;
+      padding: 1rem 0 3rem;
+    }
+
+    .panel {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(155deg, rgba(255, 255, 255, 0.06), transparent 32%),
+        linear-gradient(180deg, rgba(11, 24, 46, 0.95), rgba(7, 16, 31, 0.88));
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, transparent, rgba(120, 230, 255, 0.05), transparent),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 30%);
+      pointer-events: none;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1.2fr auto;
+      gap: 1rem;
+      align-items: center;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .brand-block {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      min-width: 0;
+    }
+
+    .logo-lockup {
+      width: 4.2rem;
+      height: 4.2rem;
+      border-radius: 1.25rem;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 30% 25%, rgba(120, 230, 255, 0.3), transparent 42%),
+        linear-gradient(160deg, rgba(20, 47, 93, 0.95), rgba(7, 16, 32, 0.95));
+      border: 1px solid rgba(113, 197, 255, 0.28);
+      box-shadow: inset 0 0 30px rgba(120, 230, 255, 0.08);
+      flex: 0 0 auto;
+    }
+
+    .brand-copy {
+      min-width: 0;
+    }
+
+    .eyebrow {
+      margin: 0 0 0.35rem;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.74rem;
+      font-weight: 800;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-family: var(--display);
+      font-size: clamp(1.3rem, 2vw, 1.7rem);
+      letter-spacing: -0.03em;
+    }
+
+    .brand-note {
+      margin: 0.35rem 0 0;
+      color: var(--muted);
+      max-width: 66ch;
+      font-size: 0.96rem;
+      line-height: 1.5;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .lang-toggle,
+    .chip-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.28rem;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .lang-btn,
+    .ghost-button,
+    .primary-button,
+    .secondary-button,
+    .tab-button,
+    .stack-option,
+    .sector-option,
+    .jump-button {
+      border: 0;
+      cursor: pointer;
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .lang-btn {
+      padding: 0.52rem 0.8rem;
+      color: var(--muted);
+      background: transparent;
+      border-radius: 999px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .lang-btn.active {
+      color: #04101f;
+      background: linear-gradient(135deg, var(--cyan), var(--blue));
+      box-shadow: 0 8px 26px rgba(43, 167, 255, 0.34);
+    }
+
+    .ghost-button,
+    .primary-button,
+    .secondary-button,
+    .jump-button {
+      padding: 0.82rem 1.05rem;
+      border-radius: 999px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+    }
+
+    .ghost-button {
+      border: 1px solid var(--line);
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .ghost-button:hover,
+    .primary-button:hover,
+    .secondary-button:hover,
+    .jump-button:hover,
+    .tab-button:hover,
+    .stack-option:hover,
+    .sector-option:hover {
+      transform: translateY(-2px);
+      text-decoration: none;
+    }
+
+    .primary-button,
+    .jump-button {
+      color: #04101f;
+      background: linear-gradient(135deg, var(--cyan), var(--blue));
+      box-shadow: 0 16px 40px rgba(43, 167, 255, 0.28);
+    }
+
+    .secondary-button {
+      border: 1px solid rgba(120, 230, 255, 0.26);
+      color: var(--ice);
+      background: linear-gradient(135deg, rgba(43, 167, 255, 0.12), rgba(120, 230, 255, 0.06));
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr 0.9fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .hero-copy,
+    .hero-visual,
+    .tabs,
+    .footer {
+      padding: 1.45rem;
+    }
+
+    .hero-copy {
+      min-height: 27rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 1.4rem;
+    }
+
+    .signal-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
+    .signal-badge,
+    .mini-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 0.78rem;
+      border-radius: 999px;
+      border: 1px solid rgba(120, 230, 255, 0.18);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--ice);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .hero-copy h1 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: clamp(2.6rem, 5.4vw, 4.85rem);
+      line-height: 0.94;
+      letter-spacing: -0.045em;
+      max-width: 10.5ch;
+    }
+
+    .lede {
+      margin: 0;
+      max-width: 60ch;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.72;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .voice-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    .voice-card {
+      padding: 0.95rem 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(120, 230, 255, 0.12);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    }
+
+    .voice-label {
+      display: block;
+      margin-bottom: 0.4rem;
+      color: var(--cyan);
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-weight: 800;
+    }
+
+    .voice-card strong {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-size: 1rem;
+    }
+
+    .voice-card span:last-child {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .hero-visual {
+      display: grid;
+      gap: 1rem;
+      align-content: space-between;
+      min-height: 27rem;
+    }
+
+    .orbit-wrap {
+      position: relative;
+      min-height: 21rem;
+      border-radius: calc(var(--radius-xl) - 8px);
+      overflow: hidden;
+      border: 1px solid rgba(120, 230, 255, 0.14);
+      background:
+        radial-gradient(circle at 50% 48%, rgba(43, 167, 255, 0.2), transparent 22%),
+        linear-gradient(180deg, rgba(10, 20, 38, 0.95), rgba(7, 14, 27, 0.92));
+    }
+
+    .orbit-wrap::before,
+    .orbit-wrap::after {
+      content: "";
+      position: absolute;
+      inset: 12%;
+      border-radius: 50%;
+      border: 1px dashed rgba(120, 230, 255, 0.2);
+      animation: spin 22s linear infinite;
+    }
+
+    .orbit-wrap::after {
+      inset: 22%;
+      animation-duration: 30s;
+      animation-direction: reverse;
+    }
+
+    .orbit-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(120, 230, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(120, 230, 255, 0.08) 1px, transparent 1px);
+      background-size: 36px 36px;
+      mask-image: radial-gradient(circle at center, black 45%, transparent 100%);
+      opacity: 0.3;
+    }
+
+    .hub,
+    .orbit-node {
+      position: absolute;
+      padding: 0.8rem 0.9rem;
+      min-width: 8rem;
+      border-radius: 18px;
+      border: 1px solid rgba(120, 230, 255, 0.22);
+      background: linear-gradient(180deg, rgba(17, 34, 63, 0.96), rgba(8, 18, 35, 0.94));
+      box-shadow: 0 18px 50px rgba(1, 10, 24, 0.38);
+      backdrop-filter: blur(14px);
+    }
+
+    .hub {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      min-width: 11rem;
+      text-align: center;
+      border-color: rgba(120, 230, 255, 0.36);
+      box-shadow: 0 0 0 1px rgba(120, 230, 255, 0.08), 0 20px 60px rgba(43, 167, 255, 0.28);
+    }
+
+    .hub strong,
+    .orbit-node strong {
+      display: block;
+      font-family: var(--display);
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .hub span,
+    .orbit-node span {
+      display: block;
+      margin-top: 0.25rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.35;
+    }
+
+    .orbit-node.one {
+      top: 12%;
+      left: 12%;
+      animation: float 7s ease-in-out infinite;
+    }
+
+    .orbit-node.nova {
+      top: 16%;
+      right: 11%;
+      animation: float 8s ease-in-out infinite 0.7s;
+    }
+
+    .orbit-node.orbit {
+      bottom: 15%;
+      left: 10%;
+      animation: float 8.8s ease-in-out infinite 1s;
+    }
+
+    .orbit-node.stylus {
+      right: 13%;
+      bottom: 12%;
+      animation: float 7.5s ease-in-out infinite 0.3s;
+    }
+
+    .beam {
+      position: absolute;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(120, 230, 255, 0.7), transparent);
+      transform-origin: left center;
+      opacity: 0.66;
+    }
+
+    .beam.one {
+      width: 34%;
+      top: 35%;
+      left: 24%;
+      transform: rotate(24deg);
+    }
+
+    .beam.nova {
+      width: 30%;
+      top: 36%;
+      right: 24%;
+      transform: rotate(-24deg);
+    }
+
+    .beam.orbit {
+      width: 34%;
+      bottom: 34%;
+      left: 22%;
+      transform: rotate(-22deg);
+    }
+
+    .beam.stylus {
+      width: 31%;
+      right: 24%;
+      bottom: 35%;
+      transform: rotate(20deg);
+    }
+
+    .visual-note {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .note-card {
+      padding: 1rem 1.05rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(120, 230, 255, 0.16);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .note-card strong {
+      display: block;
+      margin-bottom: 0.35rem;
+      font-size: 0.95rem;
+    }
+
+    .note-card span {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .stat-card {
+      padding: 1.15rem 1rem;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(11, 23, 42, 0.9), rgba(8, 17, 33, 0.86));
+      box-shadow: var(--shadow);
+    }
+
+    .stat-label {
+      color: var(--cyan);
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      font-weight: 800;
+      margin-bottom: 0.6rem;
+    }
+
+    .stat-value {
+      display: block;
+      font-family: var(--display);
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      letter-spacing: -0.04em;
+      margin-bottom: 0.3rem;
+    }
+
+    .stat-foot {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .tab-button {
+      padding: 0.86rem 1.05rem;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .tab-button.active {
+      color: var(--text);
+      border-color: var(--line-strong);
+      background: linear-gradient(135deg, rgba(43, 167, 255, 0.18), rgba(120, 230, 255, 0.08));
+      box-shadow: inset 0 0 0 1px rgba(120, 230, 255, 0.07);
+    }
+
+    main {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .tab-panel {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .tab-panel[hidden] {
+      display: none;
+    }
+
+    .section-card {
+      padding: 1.35rem;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .section-head h2,
+    .section-card h3,
+    .section-card h4 {
+      margin: 0;
+      font-family: var(--display);
+      letter-spacing: -0.03em;
+    }
+
+    .section-head h2 {
+      font-size: clamp(1.6rem, 3vw, 2.3rem);
+    }
+
+    .section-kicker {
+      margin: 0 0 0.55rem;
+      color: var(--cyan);
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-weight: 800;
+    }
+
+    .section-note {
+      margin: 0;
+      max-width: 58ch;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 0.98rem;
+    }
+
+    .grid-2,
+    .grid-3,
+    .grid-4 {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .grid-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .card {
+      padding: 1.2rem;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(13, 28, 52, 0.82), rgba(8, 17, 34, 0.82));
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .card h3 {
+      margin-bottom: 0.75rem;
+      font-size: 1.2rem;
+    }
+
+    .card h4 {
+      margin-bottom: 0.55rem;
+      font-size: 1rem;
+    }
+
+    .card ul {
+      margin: 0.8rem 0 0;
+      padding-left: 1.1rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .card li + li {
+      margin-top: 0.35rem;
+    }
+
+    .signal-list {
+      display: grid;
+      gap: 0.75rem;
+      margin-top: 0.9rem;
+    }
+
+    .signal-item {
+      padding: 0.95rem 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(120, 230, 255, 0.12);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .signal-item time {
+      display: block;
+      color: var(--cyan);
+      font-size: 0.76rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      margin-bottom: 0.35rem;
+    }
+
+    .signal-item strong {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-size: 0.98rem;
+    }
+
+    .signal-item span {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .flow-map {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.9rem;
+    }
+
+    .flow-node {
+      position: relative;
+      padding: 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(120, 230, 255, 0.12);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .flow-node::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: -0.56rem;
+      width: 1.1rem;
+      height: 1.1rem;
+      transform: translateY(-50%) rotate(45deg);
+      border-top: 1px solid rgba(120, 230, 255, 0.16);
+      border-right: 1px solid rgba(120, 230, 255, 0.16);
+      background: transparent;
+    }
+
+    .flow-node:last-child::after {
+      display: none;
+    }
+
+    .flow-step {
+      display: block;
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 0.74rem;
+      margin-bottom: 0.45rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .flow-node strong {
+      display: block;
+      margin-bottom: 0.35rem;
+    }
+
+    .flow-node span {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .stack-layout {
+      display: grid;
+      grid-template-columns: 0.82fr 1.18fr;
+      gap: 1rem;
+    }
+
+    .stack-options,
+    .sector-switcher {
+      display: grid;
+      gap: 0.7rem;
+    }
+
+    .stack-option,
+    .sector-option {
+      width: 100%;
+      text-align: left;
+      padding: 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(120, 230, 255, 0.12);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+    }
+
+    .stack-option strong,
+    .sector-option strong {
+      display: block;
+      margin-bottom: 0.28rem;
+      font-size: 0.98rem;
+    }
+
+    .stack-option span,
+    .sector-option span {
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+
+    .stack-option.active,
+    .sector-option.active {
+      border-color: rgba(120, 230, 255, 0.34);
+      background: linear-gradient(135deg, rgba(43, 167, 255, 0.14), rgba(120, 230, 255, 0.06));
+      box-shadow: inset 0 0 0 1px rgba(120, 230, 255, 0.06);
+    }
+
+    .stack-panel,
+    .sector-panel {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .stack-panel[hidden],
+    .sector-panel[hidden] {
+      display: none !important;
+    }
+
+    .detail-hero {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 1rem;
+    }
+
+    .detail-metrics {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .detail-metric {
+      padding: 0.95rem 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(120, 230, 255, 0.12);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .detail-metric label {
+      display: block;
+      margin-bottom: 0.35rem;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.73rem;
+      font-weight: 800;
+    }
+
+    .detail-metric span {
+      color: var(--ice);
+      font-size: 0.92rem;
+      line-height: 1.48;
+    }
+
+    .layer-stack {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .layer {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.8rem;
+      align-items: start;
+      padding: 0.95rem 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(120, 230, 255, 0.1);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .layer-index {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      color: #04101f;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--cyan), var(--blue));
+      box-shadow: 0 10px 24px rgba(43, 167, 255, 0.22);
+    }
+
+    .layer strong {
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .layer span {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .metric-board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.85rem;
+    }
+
+    .metric-tile {
+      padding: 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(120, 230, 255, 0.12);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .metric-tile strong {
+      display: block;
+      font-family: var(--display);
+      font-size: 1.5rem;
+      letter-spacing: -0.04em;
+      margin-bottom: 0.3rem;
+    }
+
+    .metric-tile span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 0.85rem;
+      margin-top: 0.7rem;
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.9rem;
+      padding: 0.95rem 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(120, 230, 255, 0.1);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .timeline-date {
+      min-width: 5.3rem;
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 0.77rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .timeline-copy strong {
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+
+    .timeline-copy span {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .case-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.8rem;
+      margin-top: 0.7rem;
+    }
+
+    .case-card {
+      padding: 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(120, 230, 255, 0.1);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .case-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.6rem;
+      padding: 0.38rem 0.65rem;
+      border-radius: 999px;
+      color: var(--cyan);
+      background: rgba(43, 167, 255, 0.12);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 800;
+    }
+
+    .case-card strong {
+      display: block;
+      margin-bottom: 0.35rem;
+    }
+
+    .case-card p {
+      margin-bottom: 0.75rem;
+    }
+
+    .link-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+    }
+
+    .link-row a {
+      padding: 0.45rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid rgba(120, 230, 255, 0.14);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--ice);
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .sector-layout {
+      display: grid;
+      grid-template-columns: 0.8fr 1.2fr;
+      gap: 1rem;
+    }
+
+    .recipe-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    .recipe-card {
+      padding: 0.95rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(120, 230, 255, 0.1);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .recipe-card label {
+      display: block;
+      margin-bottom: 0.35rem;
+      color: var(--cyan);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 800;
+    }
+
+    .recipe-card span {
+      color: var(--ice);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .matrix {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.7rem;
+    }
+
+    .matrix th,
+    .matrix td {
+      padding: 0.88rem 0.9rem;
+      border-bottom: 1px solid rgba(120, 230, 255, 0.1);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .matrix th {
+      color: var(--cyan);
+      font-size: 0.76rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .matrix td {
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 0.92rem;
+    }
+
+    .governance-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.85rem;
+    }
+
+    .governance-card {
+      padding: 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(120, 230, 255, 0.1);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .governance-card label {
+      display: block;
+      margin-bottom: 0.55rem;
+      color: var(--cyan);
+      font-size: 0.76rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 800;
+    }
+
+    .governance-card strong {
+      display: block;
+      margin-bottom: 0.35rem;
+      font-family: var(--display);
+      font-size: 1.35rem;
+      letter-spacing: -0.04em;
+    }
+
+    .governance-card span {
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.85rem;
+    }
+
+    .scenario-card {
+      padding: 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(120, 230, 255, 0.12);
+      background: linear-gradient(180deg, rgba(13, 30, 58, 0.78), rgba(8, 17, 34, 0.8));
+    }
+
+    .scenario-card label {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.4rem 0.68rem;
+      margin-bottom: 0.7rem;
+      border-radius: 999px;
+      background: rgba(43, 167, 255, 0.12);
+      color: var(--cyan);
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .scenario-card strong {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-size: 1.05rem;
+    }
+
+    .scenario-card span {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+
+    .risk-list {
+      display: grid;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    .risk-item {
+      padding: 0.95rem 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255, 184, 107, 0.18);
+      background: linear-gradient(180deg, rgba(255, 184, 107, 0.07), rgba(255, 255, 255, 0.02));
+    }
+
+    .risk-item strong {
+      display: block;
+      margin-bottom: 0.3rem;
+      color: #ffdcb5;
+    }
+
+    .risk-item span {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .source-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.85rem;
+    }
+
+    .snapshot-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .snapshot-card {
+      padding: 1rem;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(120, 230, 255, 0.12);
+      background: linear-gradient(180deg, rgba(13, 28, 52, 0.82), rgba(8, 17, 34, 0.82));
+    }
+
+    .snapshot-card h3 {
+      margin: 0 0 0.4rem;
+      font-family: var(--display);
+      font-size: 1.12rem;
+      letter-spacing: -0.03em;
+    }
+
+    .snapshot-card p {
+      margin: 0 0 0.9rem;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 0.92rem;
+    }
+
+    .snapshot-embed {
+      width: 100%;
+      min-height: 46rem;
+      border: 1px solid rgba(120, 230, 255, 0.12);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.03);
+      overflow: hidden;
+    }
+
+    .snapshot-embed iframe {
+      display: block;
+      width: 100%;
+      min-height: 46rem;
+      border: 0;
+      background: transparent;
+    }
+
+    .source-card {
+      padding: 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(120, 230, 255, 0.12);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .source-card strong {
+      display: block;
+      margin-bottom: 0.35rem;
+    }
+
+    .source-card p {
+      margin-bottom: 0.7rem;
+      font-size: 0.9rem;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .footer p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 78ch;
+      line-height: 1.6;
+      font-size: 0.9rem;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      justify-content: flex-end;
+    }
+
+    .footer-links a {
+      padding: 0.55rem 0.8rem;
+      border-radius: 999px;
+      border: 1px solid rgba(120, 230, 255, 0.14);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--ice);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    @media (max-width: 1100px) {
+      .hero,
+      .stack-layout,
+      .sector-layout,
+      .detail-hero {
+        grid-template-columns: 1fr;
+      }
+
+      .stats,
+      .metric-board,
+      .governance-grid,
+      .scenario-grid,
+      .source-grid,
+      .snapshot-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid-3,
+      .grid-4,
+      .voice-grid,
+      .flow-map {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .shell {
+        width: min(var(--max-width), calc(100% - 1rem));
+      }
+
+      .hero-copy,
+      .hero-visual,
+      .tabs,
+      .section-card,
+      .footer {
+        padding: 1.1rem;
+      }
+
+      .stats,
+      .grid-2,
+      .grid-3,
+      .grid-4,
+      .metric-board,
+      .case-grid,
+      .recipe-grid,
+      .governance-grid,
+      .scenario-grid,
+      .source-grid,
+      .snapshot-grid,
+      .voice-grid,
+      .flow-map {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-copy h1 {
+        max-width: 100%;
+      }
+
+      .hub,
+      .orbit-node {
+        min-width: 6.9rem;
+        padding: 0.7rem;
+      }
+
+      .orbit-node.one {
+        top: 8%;
+        left: 5%;
+      }
+
+      .orbit-node.nova {
+        top: 10%;
+        right: 4%;
+      }
+
+      .orbit-node.orbit {
+        bottom: 10%;
+        left: 3%;
+      }
+
+      .orbit-node.stylus {
+        right: 5%;
+        bottom: 8%;
+      }
+
+      .beam {
+        opacity: 0.36;
+      }
+
+      .footer {
+        flex-direction: column;
+      }
+
+      .footer-links {
+        justify-content: flex-start;
+      }
+    }
+
+    @keyframes drift {
+      from {
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+
+      to {
+        transform: translate3d(2rem, -1rem, 0) scale(1.08);
+      }
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes float {
+      0%,
+      100% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-7px);
+      }
+    }
+  </style>
+</head>
+<body data-lang="en">
+  <div class="shell">
+    <header class="topbar panel">
+      <div class="brand-block">
+        <div class="logo-lockup" aria-hidden="true">
+          <svg width="46" height="46" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 7.5L44 7.5L56.5 32L44 56.5H20L7.5 32L20 7.5Z" fill="url(#bggrad)" stroke="rgba(207,238,255,0.85)" stroke-width="2.2"/>
+            <path d="M28.8 17.8L17.2 24.4L28.8 46.2L35.6 42.3L27.3 26.6L32 23.9L40.3 39.6L47 35.7L35.4 13.9L28.8 17.8Z" fill="#EAF6FF"/>
+            <path d="M35.4 13.9L28.8 17.8L40.3 39.6L47 35.7L35.4 13.9Z" fill="#2BA7FF"/>
+            <path d="M17.2 24.4L28.8 46.2L35.6 42.3L24 20.5L17.2 24.4Z" fill="#78E6FF"/>
+            <defs>
+              <linearGradient id="bggrad" x1="13" y1="11" x2="50" y2="53" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#14386C"/>
+                <stop offset="1" stop-color="#081124"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="brand-copy">
+          <p class="eyebrow">Arbitrum Dashboard</p>
+          <h1 class="brand-title">Arbitrum Strategic Dashboard</h1>
+          <p class="brand-note lang-en">As agentic AI commerce accelerates on the internet, Arbitrum is at the centre.</p>
+          <p class="brand-note lang-es">A medida que el comercio de IA agentic se acelera en internet, Arbitrum está en el centro.</p>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="lang-toggle" aria-label="Language toggle">
+          <button class="lang-btn active" type="button" data-lang-choice="en">EN</button>
+          <button class="lang-btn" type="button" data-lang-choice="es">ES</button>
+        </div>
+        <a class="ghost-button" href="https://arbitrum.io/" target="_blank" rel="noreferrer">
+          <span class="lang-en">Official Site</span>
+          <span class="lang-es">Sitio oficial</span>
+        </a>
+        <a class="ghost-button" href="https://x.com/arbitrum" target="_blank" rel="noreferrer">@arbitrum</a>
+        <a class="primary-button" href="https://x.com/arbalestpartner" target="_blank" rel="noreferrer">
+          <span>Meet Saswat</span>
+        </a>
+      </div>
+    </header>
+
+    <section class="hero">
+      <article class="panel hero-copy">
+        <div class="lang-en">
+          <h1>From rollup to onchain operating layer.</h1>
+          <p class="lede">
+            Arbitrum is no longer just a low-fee Ethereum scaling story. It now reads as a modular execution platform spanning Arbitrum One, Nova, Orbit, and Stylus, with an increasingly clear emphasis on finance, custom chains, stablecoins, global payments, and enterprise-grade infrastructure.
+          </p>
+        </div>
+        <div class="lang-es">
+          <h1>De rollup a capa operativa onchain.</h1>
+          <p class="lede">
+            Arbitrum ya no es solo una narrativa de escalado barato para Ethereum. Hoy se entiende mejor como una plataforma modular de ejecución con Arbitrum One, Nova, Orbit y Stylus, mientras su comunicación actual enfatiza finanzas, cadenas personalizadas, stablecoins, pagos globales e infraestructura empresarial.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <button class="jump-button" type="button" data-jump="stack">
+            <span class="lang-en">Explore the stack</span>
+            <span class="lang-es">Explorar la pila</span>
+          </button>
+          <button class="secondary-button jump-button" type="button" data-jump="enterprise">
+            <span class="lang-en">Enterprise sectors</span>
+            <span class="lang-es">Sectores empresariales</span>
+          </button>
+        </div>
+      </article>
+
+      <aside class="panel hero-visual">
+        <div class="orbit-wrap" aria-hidden="true">
+          <div class="orbit-grid"></div>
+          <div class="beam one"></div>
+          <div class="beam nova"></div>
+          <div class="beam orbit"></div>
+          <div class="beam stylus"></div>
+          <div class="hub">
+            <strong>Ethereum</strong>
+            <span class="lang-en">Consensus, settlement, and security anchor</span>
+            <span class="lang-es">Ancla de consenso, liquidación y seguridad</span>
+          </div>
+          <div class="orbit-node one">
+            <strong>Arbitrum One</strong>
+            <span class="lang-en">Shared liquidity and core DeFi</span>
+            <span class="lang-es">Liquidez compartida y DeFi central</span>
+          </div>
+          <div class="orbit-node nova">
+            <strong>Nova</strong>
+            <span class="lang-en">Low-cost AnyTrust execution</span>
+            <span class="lang-es">Ejecución AnyTrust de bajo costo</span>
+          </div>
+          <div class="orbit-node orbit">
+            <strong>Orbit</strong>
+            <span class="lang-en">Custom L2 or L3 chain design</span>
+            <span class="lang-es">Diseño de cadenas L2 o L3 personalizadas</span>
+          </div>
+          <div class="orbit-node stylus">
+            <strong>Stylus</strong>
+            <span class="lang-en">Rust, C, C++, and heavier compute</span>
+            <span class="lang-es">Rust, C, C++ y cómputo más exigente</span>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="stats">
+      <article class="stat-card">
+        <div class="stat-label">
+          <span class="lang-en">Lifetime activity</span>
+          <span class="lang-es">Actividad histórica</span>
+        </div>
+        <span class="stat-value">2.1B+</span>
+        <div class="stat-foot">
+          <span class="lang-en">Arbitrum One had surpassed 2.1B lifetime transactions by late 2025.</span>
+          <span class="lang-es">Arbitrum One había superado 2.1B de transacciones acumuladas a finales de 2025.</span>
+        </div>
+      </article>
+      <article class="stat-card">
+        <div class="stat-label">
+          <span class="lang-en">Value secured</span>
+          <span class="lang-es">Valor asegurado</span>
+        </div>
+        <span class="stat-value">$20B+</span>
+        <div class="stat-foot">
+          <span class="lang-en">A late-2025 snapshot of Arbitrum’s leadership in total value secured among L2 networks.</span>
+          <span class="lang-es">Una instantánea de finales de 2025 sobre el liderazgo de Arbitrum en valor total asegurado entre redes L2.</span>
+        </div>
+      </article>
+      <article class="stat-card">
+        <div class="stat-label">
+          <span class="lang-en">Chain footprint</span>
+          <span class="lang-es">Huella de cadenas</span>
+        </div>
+        <span class="stat-value">100+</span>
+        <div class="stat-foot">
+          <span class="lang-en">Chains live or in development across the Arbitrum ecosystem by late 2025.</span>
+          <span class="lang-es">Cadenas en producción o desarrollo dentro del ecosistema Arbitrum a finales de 2025.</span>
+        </div>
+      </article>
+      <article class="stat-card">
+        <div class="stat-label">
+          <span class="lang-en">Stablecoin rail</span>
+          <span class="lang-es">Rail de stablecoins</span>
+        </div>
+        <span class="stat-value">$7.8B</span>
+        <div class="stat-foot">
+          <span class="lang-en">Stablecoin market cap on Arbitrum, from the January 13, 2026 official blog post.</span>
+          <span class="lang-es">Capitalización de mercado de stablecoins en Arbitrum, según el blog oficial del 13 de enero de 2026.</span>
+        </div>
+      </article>
+      <article class="stat-card">
+        <div class="stat-label">
+          <span class="lang-en">Holder base</span>
+          <span class="lang-es">Base de holders</span>
+        </div>
+        <span class="stat-value">7.75M</span>
+        <div class="stat-foot">
+          <span class="lang-en">Stablecoin holders on Arbitrum, per the same January 13, 2026 official update.</span>
+          <span class="lang-es">Holders de stablecoins en Arbitrum, según la misma actualización oficial del 13 de enero de 2026.</span>
+        </div>
+      </article>
+    </section>
+
+    <nav class="tabs panel" aria-label="Dashboard tabs">
+      <button class="tab-button active" type="button" data-tab="overview">
+        <span class="lang-en">Overview</span>
+        <span class="lang-es">Resumen</span>
+      </button>
+      <button class="tab-button" type="button" data-tab="stack">
+        <span class="lang-en">Stack</span>
+        <span class="lang-es">Pila</span>
+      </button>
+      <button class="tab-button" type="button" data-tab="adoption">
+        <span class="lang-en">Adoption</span>
+        <span class="lang-es">Adopción</span>
+      </button>
+      <button class="tab-button" type="button" data-tab="enterprise">
+        <span class="lang-en">Enterprise</span>
+        <span class="lang-es">Empresas</span>
+      </button>
+      <button class="tab-button" type="button" data-tab="governance">
+        <span class="lang-en">Governance</span>
+        <span class="lang-es">Gobernanza</span>
+      </button>
+      <button class="tab-button" type="button" data-tab="outlook">
+        <span class="lang-en">Outlook</span>
+        <span class="lang-es">Perspectiva</span>
+      </button>
+      <button class="tab-button" type="button" data-tab="snapshots">
+        <span class="lang-en">Snapshots</span>
+        <span class="lang-es">Snapshots</span>
+      </button>
+    </nav>
+
+    <main>
+      <section class="tab-panel" id="overview" role="tabpanel">
+        <article class="panel section-card">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">
+                <span class="lang-en">Strategic read</span>
+                <span class="lang-es">Lectura estratégica</span>
+              </p>
+              <h2 class="lang-en">Why Arbitrum matters beyond low fees</h2>
+              <h2 class="lang-es">Por qué Arbitrum importa más allá de las bajas comisiones</h2>
+            </div>
+            <p class="section-note lang-en">
+              Arbitrum is best understood as a modular execution environment rather than a single chain.
+            </p>
+            <p class="section-note lang-es">
+              Arbitrum se entiende mejor como un entorno modular de ejecución y no como una sola cadena.
+            </p>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <h3 class="lang-en">Core thesis</h3>
+              <h3 class="lang-es">Tesis central</h3>
+              <p class="lang-en">
+                Arbitrum sits at the center of Ethereum’s rollup-centric roadmap because it combines Ethereum security with configurable execution. That combination makes it relevant not only for DeFi, but also for tokenization, payments, gaming, AI infrastructure, privacy-preserving finance, and regulated enterprise deployments.
+              </p>
+              <p class="lang-es">
+                Arbitrum ocupa un lugar central en la hoja de ruta rollup-centric de Ethereum porque combina la seguridad de Ethereum con una ejecución configurable. Esa combinación lo vuelve relevante no solo para DeFi, sino también para tokenización, pagos, gaming, infraestructura de IA, finanzas con privacidad y despliegues empresariales regulados.
+              </p>
+              <ul class="lang-en">
+                <li>Ethereum remains the settlement and security base layer.</li>
+                <li>Nitro gives Arbitrum its execution performance and dispute architecture.</li>
+                <li>One, Nova, Orbit, and Stylus let teams pick different trade-offs without leaving the ecosystem.</li>
+                <li>The strongest enterprise narratives are RWAs, stablecoins, payments, and sovereign appchains.</li>
+              </ul>
+              <ul class="lang-es">
+                <li>Ethereum sigue siendo la capa base de liquidación y seguridad.</li>
+                <li>Nitro le da a Arbitrum su rendimiento de ejecución y su arquitectura de disputas.</li>
+                <li>One, Nova, Orbit y Stylus permiten elegir distintos trade-offs sin salir del ecosistema.</li>
+                <li>Las narrativas empresariales más fuertes son RWAs, stablecoins, pagos y appchains soberanas.</li>
+              </ul>
+            </div>
+
+            <div class="card">
+              <h3 class="lang-en">What official channels emphasize now</h3>
+              <h3 class="lang-es">Qué enfatizan hoy los canales oficiales</h3>
+              <div class="signal-list">
+                <a class="signal-item" href="https://blog.arbitrum.io/" target="_blank" rel="noreferrer">
+                  <time>Mar 27, 2026</time>
+                  <strong class="lang-en">How Fiet Made Reserve-Backed Liquidity Practical Onchain</strong>
+                  <strong class="lang-es">Cómo Fiet volvió práctica la liquidez onchain respaldada por reservas</strong>
+                  <span class="lang-en">The blog homepage shows reserve-backed liquidity and capital efficiency as current priorities.</span>
+                  <span class="lang-es">La portada del blog muestra la liquidez respaldada por reservas y la eficiencia de capital como prioridades actuales.</span>
+                </a>
+                <a class="signal-item" href="https://blog.arbitrum.io/" target="_blank" rel="noreferrer">
+                  <time>Mar 25, 2026</time>
+                  <strong class="lang-en">DRIP Season 1: Driving Lending Innovation</strong>
+                  <strong class="lang-es">DRIP Temporada 1: impulsando la innovación en lending</strong>
+                  <span class="lang-en">Lending incentives remain a live growth lever for the platform.</span>
+                  <span class="lang-es">Los incentivos de lending siguen siendo una palanca activa de crecimiento para la plataforma.</span>
+                </a>
+                <a class="signal-item" href="https://blog.arbitrum.io/" target="_blank" rel="noreferrer">
+                  <time>Mar 19, 2026</time>
+                  <strong class="lang-en">L1 vs L2 for enterprise chain architecture</strong>
+                  <strong class="lang-es">L1 vs L2 para arquitectura de cadenas empresariales</strong>
+                  <span class="lang-en">Enterprise design trade-offs are now part of Arbitrum’s core outbound narrative.</span>
+                  <span class="lang-es">Los trade-offs de diseño empresarial ya forman parte del mensaje central de salida de Arbitrum.</span>
+                </a>
+                <a class="signal-item" href="https://x.com/arbitrum" target="_blank" rel="noreferrer">
+                  <time>Feb 24, 2026</time>
+                  <strong class="lang-en">Mentorship Program for 15 early-stage teams</strong>
+                  <strong class="lang-es">Programa de mentoría para 15 equipos early-stage</strong>
+                  <span class="lang-en">The X feed highlights distribution, ecosystem support, and direct builder acquisition.</span>
+                  <span class="lang-es">El feed de X resalta distribución, soporte del ecosistema y adquisición directa de builders.</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 1rem;">
+            <h3 class="lang-en">Operating model</h3>
+            <h3 class="lang-es">Modelo operativo</h3>
+            <div class="flow-map">
+              <div class="flow-node">
+                <span class="flow-step">01</span>
+                <strong class="lang-en">Ethereum base layer</strong>
+                <strong class="lang-es">Capa base Ethereum</strong>
+                <span class="lang-en">Consensus, settlement, and data availability stay anchored to Ethereum’s security model.</span>
+                <span class="lang-es">El consenso, la liquidación y la disponibilidad de datos siguen anclados al modelo de seguridad de Ethereum.</span>
+              </div>
+              <div class="flow-node">
+                <span class="flow-step">02</span>
+                <strong class="lang-en">Nitro execution stack</strong>
+                <strong class="lang-es">Stack de ejecución Nitro</strong>
+                <span class="lang-en">Sequencing, compression, fraud proofs, and L2-specific logic create faster execution with Ethereum recourse.</span>
+                <span class="lang-es">La secuenciación, compresión, fraud proofs y lógica L2 específica crean una ejecución más rápida con respaldo de Ethereum.</span>
+              </div>
+              <div class="flow-node">
+                <span class="flow-step">03</span>
+                <strong class="lang-en">Product surface</strong>
+                <strong class="lang-es">Superficie de producto</strong>
+                <span class="lang-en">One, Nova, Orbit, and Stylus let builders choose security, cost, and customization profiles.</span>
+                <span class="lang-es">One, Nova, Orbit y Stylus permiten elegir perfiles de seguridad, costo y personalización.</span>
+              </div>
+              <div class="flow-node">
+                <span class="flow-step">04</span>
+                <strong class="lang-en">Industry outcomes</strong>
+                <strong class="lang-es">Resultados sectoriales</strong>
+                <span class="lang-en">The result is a shared rail for finance plus sovereign environments for enterprises, games, and infrastructure networks.</span>
+                <span class="lang-es">El resultado es un rail compartido para finanzas más entornos soberanos para empresas, juegos y redes de infraestructura.</span>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="tab-panel" id="stack" role="tabpanel" hidden>
+        <article class="panel section-card">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">
+                <span class="lang-en">Product anatomy</span>
+                <span class="lang-es">Anatomía del producto</span>
+              </p>
+              <h2 class="lang-en">The Arbitrum stack in one operating view</h2>
+              <h2 class="lang-es">La pila de Arbitrum en una sola vista operativa</h2>
+            </div>
+            <p class="section-note lang-en">
+              Arbitrum’s strongest structural insight is that it wins by offering multiple execution modes on top of the same Nitro foundation. Use the selector to move across the four products and see the deployment logic behind each one.
+            </p>
+            <p class="section-note lang-es">
+              El insight estructural más fuerte de Arbitrum es que gana al ofrecer múltiples modos de ejecución sobre la misma base Nitro. Usa el selector para recorrer los cuatro productos y ver la lógica de despliegue detrás de cada uno.
+            </p>
+          </div>
+
+          <div class="stack-layout">
+            <div class="card">
+              <h3 class="lang-en">Choose a layer</h3>
+              <h3 class="lang-es">Elige una capa</h3>
+              <div class="stack-options">
+                <button class="stack-option active" type="button" data-stack="one">
+                  <strong>Arbitrum One</strong>
+                  <span class="lang-en">Shared-security rollup for institutional-grade liquidity and composability.</span>
+                  <span class="lang-es">Rollup de seguridad compartida para liquidez y composabilidad de nivel institucional.</span>
+                </button>
+                <button class="stack-option" type="button" data-stack="nova">
+                  <strong>Arbitrum Nova</strong>
+                  <span class="lang-en">AnyTrust execution for high-volume, cost-sensitive consumer workloads.</span>
+                  <span class="lang-es">Ejecución AnyTrust para cargas de consumo de alto volumen y sensibles a costos.</span>
+                </button>
+                <button class="stack-option" type="button" data-stack="orbit">
+                  <strong>Arbitrum Orbit</strong>
+                  <span class="lang-en">Custom L2 or L3 chains with configurable settlement, gas, governance, and privacy.</span>
+                  <span class="lang-es">Cadenas L2 o L3 personalizadas con liquidación, gas, gobernanza y privacidad configurables.</span>
+                </button>
+                <button class="stack-option" type="button" data-stack="stylus">
+                  <strong>Arbitrum Stylus</strong>
+                  <span class="lang-en">MultiVM execution for Rust, C, and C++ workloads beside Solidity.</span>
+                  <span class="lang-es">Ejecución MultiVM para cargas en Rust, C y C++ junto a Solidity.</span>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div class="stack-panel" data-stack-panel="one">
+                <div class="card detail-hero">
+                  <div>
+                    <h3>Arbitrum One</h3>
+                    <p class="lang-en">
+                      The flagship rollup is where Arbitrum concentrates shared liquidity, DeFi depth, stablecoin activity, and many of its most credible institutional signals. It posts transaction data to Ethereum and is the natural home for use cases that prioritize composability and trust minimization.
+                    </p>
+                    <p class="lang-es">
+                      El rollup insignia es donde Arbitrum concentra liquidez compartida, profundidad DeFi, actividad de stablecoins y muchas de sus señales institucionales más creíbles. Publica los datos de transacción en Ethereum y es el hogar natural de los casos de uso que priorizan composabilidad y minimización de confianza.
+                    </p>
+                  </div>
+                  <div class="detail-metrics">
+                    <div class="detail-metric">
+                      <label class="lang-en">Best fit</label>
+                      <label class="lang-es">Mejor ajuste</label>
+                      <span class="lang-en">RWAs, stablecoins, DeFi primitives, treasury management, shared liquidity.</span>
+                      <span class="lang-es">RWAs, stablecoins, primitivas DeFi, gestión de tesorería y liquidez compartida.</span>
+                    </div>
+                    <div class="detail-metric">
+                      <label class="lang-en">Security profile</label>
+                      <label class="lang-es">Perfil de seguridad</label>
+                      <span class="lang-en">Rollup mode with Ethereum data availability and fraud-proof enforcement.</span>
+                      <span class="lang-es">Modo rollup con disponibilidad de datos en Ethereum y ejecución mediante fraud proofs.</span>
+                    </div>
+                    <div class="detail-metric">
+                      <label class="lang-en">Trade-off</label>
+                      <label class="lang-es">Trade-off</label>
+                      <span class="lang-en">Higher trust minimization than Nova, but not the absolute cheapest path for microtransactions.</span>
+                      <span class="lang-es">Mayor minimización de confianza que Nova, pero no es el camino más barato para microtransacciones.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stack-panel" data-stack-panel="nova" hidden>
+                <div class="card detail-hero">
+                  <div>
+                    <h3>Arbitrum Nova</h3>
+                    <p class="lang-en">
+                      Nova uses an AnyTrust model with a data availability committee to drive fees down for gaming, social, and other interaction-heavy applications. In practice, Nova fills the “high-frequency, low-value” role in the Arbitrum portfolio.
+                    </p>
+                    <p class="lang-es">
+                      Nova usa un modelo AnyTrust con un comité de disponibilidad de datos para reducir costos en gaming, social y otras aplicaciones con interacciones intensivas. En la práctica, Nova cumple el rol de “alta frecuencia y bajo valor” dentro del portafolio Arbitrum.
+                    </p>
+                  </div>
+                  <div class="detail-metrics">
+                    <div class="detail-metric">
+                      <label class="lang-en">Best fit</label>
+                      <label class="lang-es">Mejor ajuste</label>
+                      <span class="lang-en">Gaming, NFTs, social flows, microtransactions, real-time user interactions.</span>
+                      <span class="lang-es">Gaming, NFTs, flujos sociales, microtransacciones e interacciones de usuario en tiempo real.</span>
+                    </div>
+                    <div class="detail-metric">
+                      <label class="lang-en">Cost profile</label>
+                      <label class="lang-es">Perfil de costo</label>
+                      <span class="lang-en">Sub-cent style economics for workloads that would feel too expensive on full rollup rails.</span>
+                      <span class="lang-es">Economía tipo sub-centavo para cargas que resultarían demasiado caras en rails full rollup.</span>
+                    </div>
+                    <div class="detail-metric">
+                      <label class="lang-en">Trade-off</label>
+                      <label class="lang-es">Trade-off</label>
+                      <span class="lang-en">Lower cost comes with lighter trust assumptions than Arbitrum One.</span>
+                      <span class="lang-es">El menor costo implica supuestos de confianza más ligeros que en Arbitrum One.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stack-panel" data-stack-panel="orbit" hidden>
+                <div class="card detail-hero">
+                  <div>
+                    <h3>Arbitrum Orbit</h3>
+                    <p class="lang-en">
+                      Orbit is the portfolio-expansion engine. It lets teams launch their own L2 or L3 using Nitro while choosing settlement layer, data availability, gas token, permissioning, governance, sequencing rules, and even privacy posture.
+                    </p>
+                    <p class="lang-es">
+                      Orbit es el motor de expansión del portafolio. Permite lanzar un L2 o L3 propio usando Nitro mientras se eligen capa de liquidación, disponibilidad de datos, token de gas, permisos, gobernanza, reglas de secuenciación e incluso postura de privacidad.
+                    </p>
+                  </div>
+                  <div class="detail-metrics">
+                    <div class="detail-metric">
+                      <label class="lang-en">Best fit</label>
+                      <label class="lang-es">Mejor ajuste</label>
+                      <span class="lang-en">Enterprise chains, branded ecosystems, loyalty rails, gaming chains, sector-specific networks.</span>
+                      <span class="lang-es">Cadenas empresariales, ecosistemas de marca, rails de lealtad, gaming chains y redes sectoriales.</span>
+                    </div>
+                    <div class="detail-metric">
+                      <label class="lang-en">Control surface</label>
+                      <label class="lang-es">Superficie de control</label>
+                      <span class="lang-en">Custom gas tokens, governance design, allowlists, settlement choices, and sequencing models.</span>
+                      <span class="lang-es">Tokens de gas personalizados, diseño de gobernanza, allowlists, elecciones de liquidación y modelos de secuenciación.</span>
+                    </div>
+                    <div class="detail-metric">
+                      <label class="lang-en">Trade-off</label>
+                      <label class="lang-es">Trade-off</label>
+                      <span class="lang-en">More sovereignty also means more operational design responsibility.</span>
+                      <span class="lang-es">Más soberanía también implica más responsabilidad de diseño operativo.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stack-panel" data-stack-panel="stylus" hidden>
+                <div class="card detail-hero">
+                  <div>
+                    <h3>Arbitrum Stylus</h3>
+                    <p class="lang-en">
+                      Stylus extends Nitro with a coequal WASM environment, letting developers write smart contracts in Rust, C, and C++ while interoperating with Solidity contracts. Stylus is a major unlock for heavier compute, enterprise integration, and safer programming models.
+                    </p>
+                    <p class="lang-es">
+                      Stylus extiende Nitro con un entorno WASM coigual, permitiendo escribir smart contracts en Rust, C y C++ mientras interoperan con contratos en Solidity. Stylus es un gran habilitador para cómputo más intenso, integración empresarial y modelos de programación más seguros.
+                    </p>
+                  </div>
+                  <div class="detail-metrics">
+                    <div class="detail-metric">
+                      <label class="lang-en">Best fit</label>
+                      <label class="lang-es">Mejor ajuste</label>
+                      <span class="lang-en">Risk engines, pricing models, data-heavy logic, simulation, enterprise developer reuse.</span>
+                      <span class="lang-es">Motores de riesgo, modelos de pricing, lógica intensiva en datos, simulación y reutilización de equipos enterprise.</span>
+                    </div>
+                    <div class="detail-metric">
+                      <label class="lang-en">Performance angle</label>
+                      <label class="lang-es">Ángulo de rendimiento</label>
+                      <span class="lang-en">Official materials and developer commentary point to meaningfully cheaper computation for certain workloads.</span>
+                      <span class="lang-es">Los materiales oficiales y la experiencia de desarrolladores apuntan a un cómputo significativamente más barato para ciertas cargas.</span>
+                    </div>
+                    <div class="detail-metric">
+                      <label class="lang-en">Trade-off</label>
+                      <label class="lang-es">Trade-off</label>
+                      <span class="lang-en">Stylus is additive, not a replacement; teams still need a strong architecture for when to use EVM versus WASM.</span>
+                      <span class="lang-es">Stylus es aditivo, no un reemplazo; los equipos aún necesitan una arquitectura clara para decidir cuándo usar EVM versus WASM.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid-2" style="margin-top: 1rem;">
+                <div class="card">
+                  <h3 class="lang-en">Nitro architecture</h3>
+                  <h3 class="lang-es">Arquitectura Nitro</h3>
+                  <div class="layer-stack">
+                    <div class="layer">
+                      <div class="layer-index">1</div>
+                      <div>
+                        <strong>Geth core</strong>
+                        <span class="lang-en">A Geth-derived execution engine preserves strong EVM equivalence and migration ease.</span>
+                        <span class="lang-es">Un motor de ejecución derivado de Geth preserva una fuerte equivalencia EVM y facilita la migración.</span>
+                      </div>
+                    </div>
+                    <div class="layer">
+                      <div class="layer-index">2</div>
+                      <div>
+                        <strong>ArbOS</strong>
+                        <span class="lang-en">Handles gas accounting, compression, bridging, fee logic, and chain-specific operating rules.</span>
+                        <span class="lang-es">Maneja contabilidad de gas, compresión, bridging, lógica de fees y reglas operativas específicas de la cadena.</span>
+                      </div>
+                    </div>
+                    <div class="layer">
+                      <div class="layer-index">3</div>
+                      <div>
+                        <strong>Sequencer + inbox/outbox</strong>
+                        <span class="lang-en">Orders transactions, posts batches, and preserves liveness through force-inclusion paths.</span>
+                        <span class="lang-es">Ordena transacciones, publica batches y preserva liveness mediante rutas de inclusión forzada.</span>
+                      </div>
+                    </div>
+                    <div class="layer">
+                      <div class="layer-index">4</div>
+                      <div>
+                        <strong>Fraud-proof system</strong>
+                        <span class="lang-en">Interactive disputes narrow disagreements to a single step that Ethereum can adjudicate.</span>
+                        <span class="lang-es">Las disputas interactivas reducen los desacuerdos a un solo paso que Ethereum puede adjudicar.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <h3 class="lang-en">Selection logic</h3>
+                  <h3 class="lang-es">Lógica de selección</h3>
+                  <table class="matrix">
+                    <thead>
+                      <tr>
+                        <th class="lang-en">Need</th>
+                        <th class="lang-es">Necesidad</th>
+                        <th class="lang-en">Best fit</th>
+                        <th class="lang-es">Mejor ajuste</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td class="lang-en">Shared liquidity and regulatory trust</td>
+                        <td class="lang-es">Liquidez compartida y confianza regulatoria</td>
+                        <td>Arbitrum One</td>
+                        <td>Arbitrum One</td>
+                      </tr>
+                      <tr>
+                        <td class="lang-en">Ultra-low fee user actions</td>
+                        <td class="lang-es">Acciones de usuario ultra baratas</td>
+                        <td>Nova</td>
+                        <td>Nova</td>
+                      </tr>
+                      <tr>
+                        <td class="lang-en">Sovereign governance or branding</td>
+                        <td class="lang-es">Gobernanza o marca soberana</td>
+                        <td>Orbit</td>
+                        <td>Orbit</td>
+                      </tr>
+                      <tr>
+                        <td class="lang-en">Non-Solidity compute or performance-critical logic</td>
+                        <td class="lang-es">Cómputo no-Solidity o lógica crítica de rendimiento</td>
+                        <td>Stylus</td>
+                        <td>Stylus</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="tab-panel" id="adoption" role="tabpanel" hidden>
+        <article class="panel section-card">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">
+                <span class="lang-en">Market position</span>
+                <span class="lang-es">Posición de mercado</span>
+              </p>
+              <h2 class="lang-en">Adoption signals across liquidity, chains, and builders</h2>
+              <h2 class="lang-es">Señales de adopción en liquidez, cadenas y builders</h2>
+            </div>
+            <p class="section-note lang-en">
+              Arbitrum is leaning hard into stablecoins, custom chains, lending, tokenized assets, and enterprise-grade payment rails.
+            </p>
+            <p class="section-note lang-es">
+              Arbitrum está empujando con fuerza stablecoins, cadenas personalizadas, lending, activos tokenizados y rails de pago de nivel empresarial.
+            </p>
+          </div>
+
+          <div class="metric-board">
+            <div class="metric-tile">
+              <strong>$74B</strong>
+              <span class="lang-en">30-day stablecoin transfer volume on Arbitrum, per the January 13, 2026 stablecoin post.</span>
+              <span class="lang-es">Volumen de transferencia de stablecoins a 30 días en Arbitrum, según el post del 13 de enero de 2026.</span>
+            </div>
+            <div class="metric-tile">
+              <strong>$340M+</strong>
+              <span class="lang-en">Lifetime USDC and USDT withdrawals handled through Arbitrum for Rise, per the December 18, 2025 case study.</span>
+              <span class="lang-es">Retiros acumulados de USDC y USDT gestionados vía Arbitrum para Rise, según el caso de estudio del 18 de diciembre de 2025.</span>
+            </div>
+            <div class="metric-tile">
+              <strong>2,000+</strong>
+              <span class="lang-en">Tokenized stocks and ETFs referenced in Robinhood’s Arbitrum-based roadmap by February 10-11, 2026.</span>
+              <span class="lang-es">Acciones y ETFs tokenizados referenciados en la hoja de ruta de Robinhood sobre Arbitrum al 10-11 de febrero de 2026.</span>
+            </div>
+            <div class="metric-tile">
+              <strong>100x</strong>
+              <span class="lang-en">Long-term performance target highlighted in the official scaling post published on May 13, 2025.</span>
+              <span class="lang-es">Objetivo de rendimiento de largo plazo destacado en el post oficial de escalado publicado el 13 de mayo de 2025.</span>
+            </div>
+          </div>
+
+          <div class="grid-2" style="margin-top: 1rem;">
+            <div class="card">
+              <h3 class="lang-en">Official momentum timeline</h3>
+              <h3 class="lang-es">Línea de impulso oficial</h3>
+              <div class="timeline">
+                <div class="timeline-item">
+                  <div class="timeline-date">Oct 16 2025</div>
+                  <div class="timeline-copy">
+                    <strong class="lang-en">Arbitrum chains use cases post</strong>
+                    <strong class="lang-es">Post sobre casos de uso de cadenas Arbitrum</strong>
+                      <span class="lang-en">Arbitrum formalized its chain-customization thesis with examples in RWA, creator, brand, DeFi, gaming, and DePIN lanes.</span>
+                      <span class="lang-es">Arbitrum formalizó su tesis de personalización de cadenas con ejemplos en RWA, creator, marca, DeFi, gaming y DePIN.</span>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-date">Dec 18 2025</div>
+                  <div class="timeline-copy">
+                    <strong class="lang-en">Rise global payments case study</strong>
+                    <strong class="lang-es">Caso de estudio de pagos globales de Rise</strong>
+                    <span class="lang-en">Arbitrum was positioned as the preferred payout rail for fast, inexpensive stablecoin disbursements.</span>
+                    <span class="lang-es">Arbitrum fue posicionado como rail preferido de payouts para desembolsos de stablecoins rápidos y baratos.</span>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-date">Jan 08-13 2026</div>
+                  <div class="timeline-copy">
+                    <strong class="lang-en">Dia upgrade plus stablecoin-settlement narrative</strong>
+                    <strong class="lang-es">Upgrade Dia más narrativa de Arbitrum como capa de liquidación de stablecoins</strong>
+                    <span class="lang-en">The official story moved toward smoother fees, enterprise onboarding, and stablecoin-native infrastructure.</span>
+                    <span class="lang-es">La historia oficial se movió hacia fees más suaves, onboarding enterprise e infraestructura nativa para stablecoins.</span>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-date">Feb 10-25 2026</div>
+                  <div class="timeline-copy">
+                    <strong class="lang-en">Robinhood Chain, mentorship, and Founder House</strong>
+                    <strong class="lang-es">Robinhood Chain, mentoría y Founder House</strong>
+                    <span class="lang-en">Institutional tokenization and builder acquisition both featured prominently across official blog and X channels.</span>
+                    <span class="lang-es">La tokenización institucional y la captación de builders destacaron en el blog oficial y en X.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3 class="lang-en">Representative signals</h3>
+              <h3 class="lang-es">Señales representativas</h3>
+              <div class="case-grid">
+                <div class="case-card">
+                  <span class="case-badge">Finance</span>
+                  <strong>Robinhood Chain</strong>
+                  <p class="lang-en">A retail giant is moving from tokenized stock rails on Arbitrum One toward a dedicated chain built on the Arbitrum platform.</p>
+                  <p class="lang-es">Un gigante retail está pasando de rails de acciones tokenizadas en Arbitrum One a una cadena dedicada construida sobre la plataforma Arbitrum.</p>
+                  <div class="link-row">
+                    <a href="https://blog.arbitrum.io/robinhood-chain-testnet/" target="_blank" rel="noreferrer">Blog</a>
+                    <a href="https://x.com/arbitrum/status/2021404376938709279" target="_blank" rel="noreferrer">X</a>
+                  </div>
+                </div>
+                <div class="case-card">
+                  <span class="case-badge">Payments</span>
+                  <strong>Rise</strong>
+                  <p class="lang-en">The official case study makes Arbitrum look like a stablecoin payout backend for cross-border payroll and treasury operations.</p>
+                  <p class="lang-es">El caso de estudio oficial presenta a Arbitrum como backend de payouts en stablecoins para payroll transfronterizo y operaciones de tesorería.</p>
+                  <div class="link-row">
+                    <a href="https://blog.arbitrum.io/rise-global-payments/" target="_blank" rel="noreferrer">Case study</a>
+                  </div>
+                </div>
+                <div class="case-card">
+                  <span class="case-badge">Stablecoins</span>
+                  <strong>Settlement layer</strong>
+                  <p class="lang-en">Official messaging now ties Arbitrum’s edge to predictable execution, liquidity depth, and high stablecoin velocity.</p>
+                  <p class="lang-es">La comunicación oficial ahora vincula la ventaja de Arbitrum con ejecución predecible, profundidad de liquidez y alta velocidad de stablecoins.</p>
+                  <div class="link-row">
+                    <a href="https://blog.arbitrum.io/settlement-layer-stablecoins/" target="_blank" rel="noreferrer">Official post</a>
+                  </div>
+                </div>
+                <div class="case-card">
+                  <span class="case-badge">Infra</span>
+                  <strong>Dia + Stylus + Orbit</strong>
+                  <p class="lang-en">Taken together, these products tell a platform story: smoother fees, mobile-friendly onboarding, custom gas design, and non-Solidity execution.</p>
+                  <p class="lang-es">Tomados en conjunto, estos productos cuentan una historia de plataforma: fees más suaves, onboarding móvil, diseño de gas personalizado y ejecución no-Solidity.</p>
+                  <div class="link-row">
+                    <a href="https://blog.arbitrum.io/arbos-dia/" target="_blank" rel="noreferrer">Dia</a>
+                    <a href="https://blog.arbitrum.io/arbitrum-chain-use-cases-a-summary-for-builders/" target="_blank" rel="noreferrer">Orbit</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="tab-panel" id="enterprise" role="tabpanel" hidden>
+        <article class="panel section-card">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">
+                <span class="lang-en">Industry map</span>
+                <span class="lang-es">Mapa sectorial</span>
+              </p>
+              <h2 class="lang-en">Enterprise and industrial deployment lenses</h2>
+              <h2 class="lang-es">Lentes de despliegue empresarial e industrial</h2>
+            </div>
+            <p class="section-note lang-en">
+              Arbitrum’s opportunity goes far beyond crypto-native use cases. It can underpin capital markets, payments, trade documents, carbon markets, machine telemetry, health data rails, and public-sector registries. Use the sector switcher for a structured view.
+            </p>
+            <p class="section-note lang-es">
+              La oportunidad de Arbitrum va mucho más allá de los casos de uso cripto nativos. Puede soportar mercados de capitales, pagos, documentos de comercio, mercados de carbono, telemetría industrial, rails de datos de salud y registros del sector público. Usa el selector sectorial para una vista estructurada.
+            </p>
+          </div>
+
+          <div class="sector-layout">
+            <div class="card">
+              <h3 class="lang-en">Sector switcher</h3>
+              <h3 class="lang-es">Selector de sector</h3>
+              <div class="sector-switcher">
+                <button class="sector-option active" type="button" data-sector="capital">
+                  <strong class="lang-en">Capital markets</strong>
+                  <strong class="lang-es">Mercados de capitales</strong>
+                  <span class="lang-en">Tokenized treasuries, equities, and derivatives.</span>
+                  <span class="lang-es">Treasuries tokenizados, acciones y derivados.</span>
+                </button>
+                <button class="sector-option" type="button" data-sector="payments">
+                  <strong class="lang-en">Payments and banking</strong>
+                  <strong class="lang-es">Pagos y banca</strong>
+                  <span class="lang-en">Stablecoin settlement, remittances, payroll, and onchain credit rails.</span>
+                  <span class="lang-es">Liquidación con stablecoins, remesas, payroll y rails de crédito onchain.</span>
+                </button>
+                <button class="sector-option" type="button" data-sector="trade">
+                  <strong class="lang-en">Trade and logistics</strong>
+                  <strong class="lang-es">Comercio y logística</strong>
+                  <span class="lang-en">Bills of lading, inventory finance, provenance, and supply-chain events.</span>
+                  <span class="lang-es">Bill of lading, financiamiento de inventario, procedencia y eventos de supply chain.</span>
+                </button>
+                <button class="sector-option" type="button" data-sector="energy">
+                  <strong class="lang-en">Energy and industry</strong>
+                  <strong class="lang-es">Energía e industria</strong>
+                  <span class="lang-en">Carbon markets, microgrids, machine identities, and telemetry.</span>
+                  <span class="lang-es">Mercados de carbono, microredes, identidades de máquinas y telemetría.</span>
+                </button>
+                <button class="sector-option" type="button" data-sector="health">
+                  <strong class="lang-en">Healthcare</strong>
+                  <strong class="lang-es">Salud</strong>
+                  <span class="lang-en">Clinical audit trails, data marketplaces, and privacy-preserving analytics.</span>
+                  <span class="lang-es">Trazas clínicas, mercados de datos y analítica con preservación de privacidad.</span>
+                </button>
+                <button class="sector-option" type="button" data-sector="public">
+                  <strong class="lang-en">Public sector</strong>
+                  <strong class="lang-es">Sector público</strong>
+                  <span class="lang-en">Identity, land registries, mobility payments, and smart-city services.</span>
+                  <span class="lang-es">Identidad, registros de tierra, pagos de movilidad y servicios de smart city.</span>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div class="sector-panel" data-sector-panel="capital">
+                <div class="card">
+                  <h3 class="lang-en">Capital markets deployment pattern</h3>
+                  <h3 class="lang-es">Patrón de despliegue para mercados de capitales</h3>
+                  <p class="lang-en">
+                    Arbitrum’s strongest enterprise story is arguably tokenized finance. Treasuries, money-market funds, tokenized equities, and derivatives all show how Arbitrum combines liquidity, programmability, and Ethereum-aligned trust.
+                  </p>
+                  <p class="lang-es">
+                    La historia empresarial más fuerte de Arbitrum probablemente sea la de finanzas tokenizadas. Treasuries, fondos monetarios, acciones tokenizadas y derivados muestran cómo Arbitrum combina liquidez, programabilidad y confianza alineada con Ethereum.
+                  </p>
+                  <div class="recipe-grid" style="margin-top: 0.9rem;">
+                    <div class="recipe-card">
+                      <label class="lang-en">Primary stack</label>
+                      <label class="lang-es">Stack principal</label>
+                      <span class="lang-en">Arbitrum One for shared liquidity, Orbit for compliance-first venues, Stylus for pricing and risk engines.</span>
+                      <span class="lang-es">Arbitrum One para liquidez compartida, Orbit para entornos compliance-first y Stylus para pricing y motores de riesgo.</span>
+                    </div>
+                    <div class="recipe-card">
+                      <label class="lang-en">Why it fits</label>
+                      <label class="lang-es">Por qué encaja</label>
+                      <span class="lang-en">24/7 transferability, collateral composability, programmable cash flows, and fast settlement on Ethereum-aligned rails.</span>
+                      <span class="lang-es">Transferibilidad 24/7, composabilidad de colateral, flujos programables y liquidación rápida sobre rails alineados con Ethereum.</span>
+                    </div>
+                    <div class="recipe-card">
+                      <label class="lang-en">Illustrative signals</label>
+                      <label class="lang-es">Señales ilustrativas</label>
+                      <span class="lang-en">Spiko, WisdomTree, Franklin Templeton, BlackRock, and Robinhood Chain all reinforce this lane.</span>
+                      <span class="lang-es">Spiko, WisdomTree, Franklin Templeton, BlackRock y Robinhood Chain refuerzan esta línea.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="sector-panel" data-sector-panel="payments" hidden>
+                <div class="card">
+                  <h3 class="lang-en">Payments and banking deployment pattern</h3>
+                  <h3 class="lang-es">Patrón de despliegue para pagos y banca</h3>
+                  <p class="lang-en">
+                    The payments story is already concrete: the official Rise case study plus El Dorado and USD.AI ecosystem examples show Arbitrum becoming a settlement layer for payroll, remittances, neobank experiences, and onchain credit that interfaces with existing payment systems.
+                  </p>
+                  <p class="lang-es">
+                    La historia de pagos ya es concreta: el caso oficial de Rise, junto con ejemplos del ecosistema como El Dorado y USD.AI, muestran a Arbitrum convirtiéndose en capa de liquidación para payroll, remesas, experiencias neobank y crédito onchain que se conecta con sistemas de pago existentes.
+                  </p>
+                  <div class="recipe-grid" style="margin-top: 0.9rem;">
+                    <div class="recipe-card">
+                      <label class="lang-en">Primary stack</label>
+                      <label class="lang-es">Stack principal</label>
+                      <span class="lang-en">Arbitrum One for liquidity and stablecoins, Orbit for branded or corridor-specific payment rails.</span>
+                      <span class="lang-es">Arbitrum One para liquidez y stablecoins, Orbit para rails de pago de marca o específicos por corredor.</span>
+                    </div>
+                    <div class="recipe-card">
+                      <label class="lang-en">Why it fits</label>
+                      <label class="lang-es">Por qué encaja</label>
+                      <span class="lang-en">Low fees, strong stablecoin depth, fast confirmations, and credible ties to off-ramps and payment infrastructure.</span>
+                      <span class="lang-es">Bajas comisiones, gran profundidad de stablecoins, confirmaciones rápidas y vínculos creíbles con off-ramps e infraestructura de pagos.</span>
+                    </div>
+                    <div class="recipe-card">
+                      <label class="lang-en">Illustrative signals</label>
+                      <label class="lang-es">Señales ilustrativas</label>
+                      <span class="lang-en">Rise, El Dorado, PayPal and USD.AI all point to money movement, not just speculative holding.</span>
+                      <span class="lang-es">Rise, El Dorado, PayPal y USD.AI apuntan a movimiento de dinero real, no solo a tenencia especulativa.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="sector-panel" data-sector-panel="trade" hidden>
+                <div class="card">
+                  <h3 class="lang-en">Trade and logistics deployment pattern</h3>
+                  <h3 class="lang-es">Patrón de despliegue para comercio y logística</h3>
+                  <p class="lang-en">
+                    Trade documents, inventory tokens, provenance events, and financing flows all benefit from programmable release conditions and auditability. Orbit suits consortium-style networks, Nova or Orbit fit event-heavy operations, and One supports financing legs that need shared liquidity.
+                  </p>
+                  <p class="lang-es">
+                    Los documentos comerciales, tokens de inventario, eventos de procedencia y flujos de financiamiento se benefician de condiciones programables de liberación y auditabilidad. Orbit encaja para redes tipo consorcio, Nova u Orbit para operaciones con muchos eventos y One para las patas de financiamiento que necesitan liquidez compartida.
+                  </p>
+                  <div class="recipe-grid" style="margin-top: 0.9rem;">
+                    <div class="recipe-card">
+                      <label class="lang-en">Primary stack</label>
+                      <label class="lang-es">Stack principal</label>
+                      <span class="lang-en">Orbit for permissioning, Nova or Orbit for frequent scans, One for financing and insurance rails.</span>
+                      <span class="lang-es">Orbit para permisos, Nova u Orbit para escaneos frecuentes, One para rails de financiamiento y seguros.</span>
+                    </div>
+                    <div class="recipe-card">
+                      <label class="lang-en">Why it fits</label>
+                      <label class="lang-es">Por qué encaja</label>
+                      <span class="lang-en">Programmable release of documents, onchain collateralization, and low-cost event anchoring all matter here.</span>
+                      <span class="lang-es">La liberación programable de documentos, la colateralización onchain y el anclaje barato de eventos son claves aquí.</span>
+                    </div>
+                    <div class="recipe-card">
+                      <label class="lang-en">Illustrative signals</label>
+                      <label class="lang-es">Señales ilustrativas</label>
+                      <span class="lang-en">Bills of lading, supply-chain finance, provenance logs, and tokenized inventory all fit this pattern.</span>
+                      <span class="lang-es">Bill of lading, supply-chain finance, logs de procedencia e inventario tokenizado encajan en este patrón.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="sector-panel" data-sector-panel="energy" hidden>
+                <div class="card">
+                  <h3 class="lang-en">Energy and industry deployment pattern</h3>
+                  <h3 class="lang-es">Patrón de despliegue para energía e industria</h3>
+                  <p class="lang-en">
+                    Carbon credits, renewable-energy instruments, microgrids, machine identities, telemetry feeds, and tokenized inventory all point to the same logic: frequent events should be cheap, but high-value settlements and financing steps still need credible anchoring and composability.
+                  </p>
+                  <p class="lang-es">
+                    Créditos de carbono, instrumentos de energía renovable, microredes, identidades de máquinas, feeds de telemetría e inventario tokenizado apuntan a la misma lógica: los eventos frecuentes deben ser baratos, pero las liquidaciones y pasos de financiamiento de alto valor siguen necesitando anclaje creíble y composabilidad.
+                  </p>
+                  <div class="recipe-grid" style="margin-top: 0.9rem;">
+                    <div class="recipe-card">
+                      <label class="lang-en">Primary stack</label>
+                      <label class="lang-es">Stack principal</label>
+                      <span class="lang-en">Orbit or Nova for high-frequency events, Stylus for MRV and analytics, One for capital-market style settlement.</span>
+                      <span class="lang-es">Orbit o Nova para eventos de alta frecuencia, Stylus para MRV y analítica, One para liquidación tipo mercado de capitales.</span>
+                    </div>
+                    <div class="recipe-card">
+                      <label class="lang-en">Why it fits</label>
+                      <label class="lang-es">Por qué encaja</label>
+                      <span class="lang-en">Low fees and flexible DA models make Arbitrum more realistic than L1 for telemetry-heavy environments.</span>
+                      <span class="lang-es">Los bajos costos y modelos flexibles de DA hacen que Arbitrum sea más realista que L1 para entornos intensivos en telemetría.</span>
+                    </div>
+                    <div class="recipe-card">
+                      <label class="lang-en">Illustrative signals</label>
+                      <label class="lang-es">Señales ilustrativas</label>
+                      <span class="lang-en">Carbon-market logic, peer-to-peer energy settlement, and Industry 4.0 machine telemetry all fit naturally here.</span>
+                      <span class="lang-es">La lógica de mercados de carbono, la liquidación peer-to-peer de energía y la telemetría Industry 4.0 encajan de forma natural aquí.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="sector-panel" data-sector-panel="health" hidden>
+                <div class="card">
+                  <h3 class="lang-en">Healthcare deployment pattern</h3>
+                  <h3 class="lang-es">Patrón de despliegue para salud</h3>
+                  <p class="lang-en">
+                    Health data cannot live on fully open rails in raw form, but Arbitrum can still anchor commitments, governance checkpoints, consent controls, and tokenized incentive systems. Permissioned Orbit environments with privacy-preserving analytics and selective disclosure layers make that design more realistic.
+                  </p>
+                  <p class="lang-es">
+                    Los datos de salud no pueden vivir en bruto sobre rails totalmente abiertos, pero Arbitrum sí puede anclar compromisos, checkpoints de gobernanza, controles de consentimiento y sistemas de incentivos tokenizados. Los entornos Orbit permissioned con analítica que preserva privacidad y capas de divulgación selectiva vuelven este diseño más realista.
+                  </p>
+                  <div class="recipe-grid" style="margin-top: 0.9rem;">
+                    <div class="recipe-card">
+                      <label class="lang-en">Primary stack</label>
+                      <label class="lang-es">Stack principal</label>
+                      <span class="lang-en">Orbit for permissions, Stylus for advanced analytics, One for audit anchoring and financial bridges.</span>
+                      <span class="lang-es">Orbit para permisos, Stylus para analítica avanzada y One para anclaje de auditoría y puentes financieros.</span>
+                    </div>
+                    <div class="recipe-card">
+                      <label class="lang-en">Why it fits</label>
+                      <label class="lang-es">Por qué encaja</label>
+                      <span class="lang-en">The stack supports provenance, programmability, and periodic public auditability without forcing raw data exposure.</span>
+                      <span class="lang-es">La pila soporta procedencia, programabilidad y auditabilidad pública periódica sin forzar exposición de datos crudos.</span>
+                    </div>
+                    <div class="recipe-card">
+                      <label class="lang-en">Illustrative signals</label>
+                      <label class="lang-es">Señales ilustrativas</label>
+                      <span class="lang-en">Clinical-trial logs, data marketplaces, consent-driven rewards, and research coordination all fit this architecture.</span>
+                      <span class="lang-es">Los logs de ensayos clínicos, mercados de datos, recompensas basadas en consentimiento y coordinación de investigación encajan en esta arquitectura.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="sector-panel" data-sector-panel="public" hidden>
+                <div class="card">
+                  <h3 class="lang-en">Public-sector deployment pattern</h3>
+                  <h3 class="lang-es">Patrón de despliegue para sector público</h3>
+                  <p class="lang-en">
+                    Public institutions can use Arbitrum for identity, land records, registries, mobility systems, and smart-city coordination. The key idea is not that governments should put everything on a public chain, but that they can run jurisdiction-specific Orbit environments while anchoring commitments for verifiability.
+                  </p>
+                  <p class="lang-es">
+                    Las instituciones públicas pueden usar Arbitrum para identidad, registros de tierra, registros administrativos, sistemas de movilidad y coordinación smart-city. La idea clave no es ponerlo todo en una cadena pública, sino ejecutar entornos Orbit específicos por jurisdicción mientras se anclan compromisos para verificabilidad.
+                  </p>
+                  <div class="recipe-grid" style="margin-top: 0.9rem;">
+                    <div class="recipe-card">
+                      <label class="lang-en">Primary stack</label>
+                      <label class="lang-es">Stack principal</label>
+                      <span class="lang-en">Orbit for governance and privacy rules, One for public verification anchors, Stylus for routing or optimization logic.</span>
+                      <span class="lang-es">Orbit para reglas de gobernanza y privacidad, One para anclajes de verificación pública, Stylus para lógica de ruteo u optimización.</span>
+                    </div>
+                    <div class="recipe-card">
+                      <label class="lang-en">Why it fits</label>
+                      <label class="lang-es">Por qué encaja</label>
+                      <span class="lang-en">It balances local control with tamper-resistant proofs and broader interoperability.</span>
+                      <span class="lang-es">Equilibra control local con pruebas resistentes a manipulaciones e interoperabilidad más amplia.</span>
+                    </div>
+                    <div class="recipe-card">
+                      <label class="lang-en">Illustrative signals</label>
+                      <label class="lang-es">Señales ilustrativas</label>
+                      <span class="lang-en">Digital identity, land registries, congestion pricing, parking, and mobility services are all strong public-sector fits.</span>
+                      <span class="lang-es">La identidad digital, los registros de tierra, los peajes urbanos, el parking y los servicios de movilidad son encajes sólidos para el sector público.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card" style="margin-top: 1rem;">
+                <h3 class="lang-en">Enterprise design matrix</h3>
+                <h3 class="lang-es">Matriz de diseño empresarial</h3>
+                <table class="matrix">
+                  <thead>
+                    <tr>
+                      <th class="lang-en">Requirement</th>
+                      <th class="lang-es">Requisito</th>
+                      <th class="lang-en">Arbitrum pattern</th>
+                      <th class="lang-es">Patrón Arbitrum</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="lang-en">Maximum trust minimization</td>
+                      <td class="lang-es">Máxima minimización de confianza</td>
+                      <td class="lang-en">Use Arbitrum One or Orbit rollup mode that settles directly to Ethereum.</td>
+                      <td class="lang-es">Usar Arbitrum One o modo rollup de Orbit con liquidación directa en Ethereum.</td>
+                    </tr>
+                    <tr>
+                      <td class="lang-en">Low-cost, event-heavy workloads</td>
+                      <td class="lang-es">Cargas con muchos eventos y bajo costo</td>
+                      <td class="lang-en">Use Nova or Orbit AnyTrust configurations.</td>
+                      <td class="lang-es">Usar Nova o configuraciones AnyTrust en Orbit.</td>
+                    </tr>
+                    <tr>
+                      <td class="lang-en">Custom governance and branding</td>
+                      <td class="lang-es">Gobernanza y branding personalizados</td>
+                      <td class="lang-en">Use Orbit with custom gas token, permissioning, and sequencing rules.</td>
+                      <td class="lang-es">Usar Orbit con token de gas, permisos y reglas de secuenciación personalizadas.</td>
+                    </tr>
+                    <tr>
+                      <td class="lang-en">Performance-heavy application logic</td>
+                      <td class="lang-es">Lógica de aplicación exigente en rendimiento</td>
+                      <td class="lang-en">Pair Stylus with EVM contracts in a MultiVM architecture.</td>
+                      <td class="lang-es">Combinar Stylus con contratos EVM en una arquitectura MultiVM.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="tab-panel" id="governance" role="tabpanel" hidden>
+        <article class="panel section-card">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">
+                <span class="lang-en">Control and economics</span>
+                <span class="lang-es">Control y economía</span>
+              </p>
+              <h2 class="lang-en">Governance, treasury, and revenue design</h2>
+              <h2 class="lang-es">Gobernanza, tesorería y diseño de ingresos</h2>
+            </div>
+            <p class="section-note lang-en">
+              Governance is central, not peripheral. Arbitrum’s DAO, treasury, and revenue mechanisms shape how the ecosystem funds incentives, responds to controversy, and experiments with value capture through fees, Timeboost, and potential future staking or fee sharing.
+            </p>
+            <p class="section-note lang-es">
+              La gobernanza es central, no periférica. El DAO, la tesorería y los mecanismos de ingresos de Arbitrum definen cómo el ecosistema financia incentivos, responde a controversias y experimenta con captura de valor mediante fees, Timeboost y posibles esquemas futuros de staking o fee sharing.
+            </p>
+          </div>
+
+          <div class="governance-grid">
+            <div class="governance-card">
+              <label class="lang-en">Token role</label>
+              <label class="lang-es">Rol del token</label>
+              <strong>ARB</strong>
+              <span class="lang-en">Governance-only token. It is not required for gas and instead steers upgrades, treasury decisions, and major economic parameters.</span>
+              <span class="lang-es">Token solo de gobernanza. No es necesario para pagar gas y se usa para dirigir upgrades, decisiones de tesorería y parámetros económicos clave.</span>
+            </div>
+            <div class="governance-card">
+              <label class="lang-en">Community allocation</label>
+              <label class="lang-es">Asignación comunitaria</label>
+              <strong>55.5%</strong>
+              <span class="lang-en">Initial share of the 10B supply reserved for community pathways including airdrops and the DAO treasury.</span>
+              <span class="lang-es">Porción inicial del suministro de 10B reservada para vías comunitarias, incluyendo airdrops y la tesorería del DAO.</span>
+            </div>
+            <div class="governance-card">
+              <label class="lang-en">Treasury budgeting</label>
+              <label class="lang-es">Presupuesto de tesorería</label>
+              <strong>26%</strong>
+              <span class="lang-en">Share of the initial treasury balance budgeted by governance proposals between mid-2023 and mid-2025.</span>
+              <span class="lang-es">Porción del balance inicial de tesorería presupuestada por propuestas de gobernanza entre mediados de 2023 y mediados de 2025.</span>
+            </div>
+            <div class="governance-card">
+              <label class="lang-en">Timeboost revenue</label>
+              <label class="lang-es">Ingresos por Timeboost</label>
+              <strong>$5M+</strong>
+              <span class="lang-en">Revenue in the first seven months of Timeboost, illustrating MEV internalization as a DAO funding path.</span>
+              <span class="lang-es">Ingresos en los primeros siete meses de Timeboost, ilustrando la internalización de MEV como vía de financiamiento del DAO.</span>
+            </div>
+          </div>
+
+          <div class="grid-2" style="margin-top: 1rem;">
+            <div class="card">
+              <h3 class="lang-en">Governance timeline</h3>
+              <h3 class="lang-es">Cronología de gobernanza</h3>
+              <div class="timeline">
+                <div class="timeline-item">
+                  <div class="timeline-date">Mar 2023</div>
+                  <div class="timeline-copy">
+                    <strong class="lang-en">ARB launch and DAO transition</strong>
+                    <strong class="lang-es">Lanzamiento de ARB y transición al DAO</strong>
+                    <span class="lang-en">Protocol control moved into the Arbitrum DAO and the governance token became the core mechanism for upgrades and treasury direction.</span>
+                    <span class="lang-es">El control del protocolo pasó al Arbitrum DAO y el token de gobernanza se convirtió en el mecanismo central para upgrades y dirección de tesorería.</span>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-date">2023</div>
+                  <div class="timeline-copy">
+                    <strong class="lang-en">AIP-1 controversy</strong>
+                    <strong class="lang-es">Controversia AIP-1</strong>
+                    <span class="lang-en">The early governance clash exposed transparency risk but also forced tighter oversight and revised allocation structures.</span>
+                    <span class="lang-es">El choque temprano de gobernanza expuso riesgo de transparencia, pero también forzó más supervisión y estructuras de asignación revisadas.</span>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-date">2025</div>
+                  <div class="timeline-copy">
+                    <strong class="lang-en">RWA programs and Timeboost</strong>
+                    <strong class="lang-es">Programas de RWA y Timeboost</strong>
+                    <span class="lang-en">Treasury allocation increasingly targeted demand-side growth, tokenization, and MEV-linked revenue capture.</span>
+                    <span class="lang-es">La asignación de tesorería se orientó cada vez más al crecimiento por demanda, la tokenización y la captura de ingresos ligada a MEV.</span>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-date">2026+</div>
+                  <div class="timeline-copy">
+                    <strong class="lang-en">Next design frontier</strong>
+                    <strong class="lang-es">Próxima frontera de diseño</strong>
+                    <span class="lang-en">Sequencer decentralization, staking, fee-sharing, and fairness in transaction ordering remain major open design questions.</span>
+                    <span class="lang-es">La descentralización del secuenciador, el staking, el fee-sharing y la justicia en el ordenamiento de transacciones siguen siendo preguntas de diseño abiertas.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3 class="lang-en">Economic profile in plain language</h3>
+              <h3 class="lang-es">Perfil económico en lenguaje claro</h3>
+              <ul class="lang-en">
+                <li>Arbitrum’s economic story is not just ARB price; it is fee generation, treasury deployment, and how value capture evolves.</li>
+                <li>Arbitrum One generated more than $600M in ecosystem GDP or fee revenue in 2025, with margins above 90% across four revenue streams.</li>
+                <li>Those streams include user gas fees, fees from chains posting data, Timeboost auction revenue, and possible future staking or fee-share designs.</li>
+                <li>The DAO also holds over $150M in non-native assets, giving it strategic runway even through volatile market cycles.</li>
+              </ul>
+              <ul class="lang-es">
+                <li>La historia económica de Arbitrum no es solo el precio de ARB; es generación de fees, despliegue de tesorería y evolución de captura de valor.</li>
+                <li>Arbitrum One generó más de $600M en GDP del ecosistema o ingresos por fees en 2025, con márgenes superiores al 90% en cuatro flujos.</li>
+                <li>Esos flujos incluyen fees de gas de usuarios, fees de cadenas que publican datos, ingresos de subastas Timeboost y posibles diseños futuros de staking o fee sharing.</li>
+                <li>El DAO también posee más de $150M en activos no nativos, lo que le da runway estratégico incluso en ciclos de mercado volátiles.</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="tab-panel" id="outlook" role="tabpanel" hidden>
+        <article class="panel section-card">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">
+                <span class="lang-en">Roadmap and risk</span>
+                <span class="lang-es">Hoja de ruta y riesgo</span>
+              </p>
+              <h2 class="lang-en">What could expand Arbitrum’s lead, and what could slow it down</h2>
+              <h2 class="lang-es">Qué podría ampliar la ventaja de Arbitrum y qué podría frenarla</h2>
+            </div>
+            <p class="section-note lang-en">
+              The outlook is optimistic but not naive. Ethereum’s roadmap, Arbitrum’s product breadth, and enterprise tokenization are powerful tailwinds, while ZK competition, token-utility ambiguity, MEV centralization, and regulatory uncertainty remain real constraints.
+            </p>
+            <p class="section-note lang-es">
+              La perspectiva es optimista pero no ingenua. La hoja de ruta de Ethereum, la amplitud del producto Arbitrum y la tokenización empresarial son fuertes vientos de cola, mientras que la competencia ZK, la ambigüedad en la utilidad del token, la centralización MEV y la incertidumbre regulatoria siguen siendo restricciones reales.
+            </p>
+          </div>
+
+          <div class="scenario-grid">
+            <div class="scenario-card">
+              <label class="lang-en">Near term</label>
+              <label class="lang-es">Corto plazo</label>
+              <strong class="lang-en">Stablecoins, lending, and tokenized assets keep compounding</strong>
+              <strong class="lang-es">Stablecoins, lending y activos tokenizados siguen acumulando tracción</strong>
+              <span class="lang-en">The official January to March 2026 story suggests Arbitrum is consolidating around settlement, lending incentives, and enterprise-ready chain design.</span>
+              <span class="lang-es">La narrativa oficial de enero a marzo de 2026 sugiere que Arbitrum se consolida alrededor de liquidación, incentivos de lending y diseño de cadenas enterprise-ready.</span>
+            </div>
+            <div class="scenario-card">
+              <label class="lang-en">Mid term</label>
+              <label class="lang-es">Mediano plazo</label>
+              <strong class="lang-en">Orbit clusters become the expansion engine</strong>
+              <strong class="lang-es">Los clusters Orbit se vuelven el motor de expansión</strong>
+              <span class="lang-en">Custom chains for finance, brands, AI, gaming, and infrastructure could make Arbitrum less like one network and more like a family of interoperable execution domains.</span>
+              <span class="lang-es">Las cadenas personalizadas para finanzas, marcas, IA, gaming e infraestructura podrían hacer que Arbitrum se parezca menos a una sola red y más a una familia de dominios interoperables de ejecución.</span>
+            </div>
+            <div class="scenario-card">
+              <label class="lang-en">Long term</label>
+              <label class="lang-es">Largo plazo</label>
+              <strong class="lang-en">Ethereum data-cost reductions widen the addressable market</strong>
+              <strong class="lang-es">La reducción de costos de datos en Ethereum amplía el mercado objetivo</strong>
+              <span class="lang-en">If full danksharding lands in the 2026-2027 window widely discussed across the ecosystem, high-volume enterprise and IoT-style transaction flows become much more realistic.</span>
+              <span class="lang-es">Si el full danksharding llega en la ventana 2026-2027 ampliamente discutida en el ecosistema, los flujos empresariales de alto volumen y estilo IoT se vuelven mucho más realistas.</span>
+            </div>
+          </div>
+
+          <div class="grid-2" style="margin-top: 1rem;">
+            <div class="card">
+              <h3 class="lang-en">Roadmap tailwinds</h3>
+              <h3 class="lang-es">Vientos de cola de la hoja de ruta</h3>
+              <div class="timeline">
+                <div class="timeline-item">
+                  <div class="timeline-date">Mar 2024</div>
+                  <div class="timeline-copy">
+                    <strong>Dencun</strong>
+                    <span class="lang-en">Proto-danksharding lowered data costs for rollups and made the L2 model economically stronger.</span>
+                    <span class="lang-es">Proto-danksharding redujo costos de datos para rollups y fortaleció económicamente el modelo L2.</span>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-date">May 2025</div>
+                  <div class="timeline-copy">
+                    <strong class="lang-en">Scaling pillars: performance, unification, decentralization</strong>
+                    <strong class="lang-es">Pilares de escalado: rendimiento, unificación y descentralización</strong>
+                    <span class="lang-en">Official strategy makes clear that Arbitrum wants to scale without giving up ecosystem coherence.</span>
+                    <span class="lang-es">La estrategia oficial deja claro que Arbitrum quiere escalar sin sacrificar coherencia de ecosistema.</span>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-date">Jan 2026</div>
+                  <div class="timeline-copy">
+                    <strong>ArbOS Dia</strong>
+                    <span class="lang-en">Smoother gas behavior, more throughput foundations, mobile-friendly auth cues, and better gas-token flexibility for chains.</span>
+                    <span class="lang-es">Comportamiento de gas más suave, bases para más throughput, señales de autenticación mobile-friendly y mejor flexibilidad de gas-token para cadenas.</span>
+                  </div>
+                </div>
+                <div class="timeline-item">
+                  <div class="timeline-date">2026-2027</div>
+                  <div class="timeline-copy">
+                    <strong>Danksharding era</strong>
+                    <span class="lang-en">The long-term expectation is even cheaper L2 data availability, opening the door to very high-volume transaction categories.</span>
+                    <span class="lang-es">La expectativa de largo plazo es una disponibilidad de datos L2 aún más barata, abriendo la puerta a categorías de transacciones de muy alto volumen.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3 class="lang-en">Watchpoints and risks</h3>
+              <h3 class="lang-es">Puntos de vigilancia y riesgos</h3>
+              <div class="risk-list">
+                <div class="risk-item">
+                  <strong class="lang-en">ZK competition</strong>
+                  <strong class="lang-es">Competencia ZK</strong>
+                  <span class="lang-en">If ZK systems close the tooling and compatibility gap faster than expected, some premium workloads may migrate.</span>
+                  <span class="lang-es">Si los sistemas ZK cierran la brecha de tooling y compatibilidad más rápido de lo esperado, algunas cargas premium podrían migrar.</span>
+                </div>
+                <div class="risk-item">
+                  <strong class="lang-en">Governance-value disconnect</strong>
+                  <strong class="lang-es">Desconexión entre gobernanza y valor</strong>
+                  <span class="lang-en">ARB remains governance-heavy; if holders do not see coherent value capture, sentiment can diverge from ecosystem growth.</span>
+                  <span class="lang-es">ARB sigue siendo muy de gobernanza; si los holders no perciben captura de valor coherente, el sentimiento puede divergir del crecimiento del ecosistema.</span>
+                </div>
+                <div class="risk-item">
+                  <strong class="lang-en">MEV centralization</strong>
+                  <strong class="lang-es">Centralización de MEV</strong>
+                  <span class="lang-en">Timeboost can fund the DAO, but it also creates fairness and concentration questions that matter for markets and regulators.</span>
+                  <span class="lang-es">Timeboost puede financiar al DAO, pero también crea preguntas de equidad y concentración que importan para mercados y reguladores.</span>
+                </div>
+                <div class="risk-item">
+                  <strong class="lang-en">Regulatory complexity</strong>
+                  <strong class="lang-es">Complejidad regulatoria</strong>
+                  <span class="lang-en">RWAs, stablecoins, and tokenized securities all rely on legal frameworks that are still evolving across jurisdictions.</span>
+                  <span class="lang-es">RWAs, stablecoins y valores tokenizados dependen de marcos legales que siguen evolucionando entre jurisdicciones.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="tab-panel" id="snapshots" role="tabpanel" hidden>
+        <article class="panel section-card">
+          <div class="section-head">
+            <div>
+              <p class="section-kicker">
+                <span class="lang-en">Education in Mexico</span>
+                <span class="lang-es">Educación en México</span>
+              </p>
+              <h2 class="lang-en">Education in Mexico</h2>
+              <h2 class="lang-es">Educación en México</h2>
+            </div>
+          </div>
+
+          <div class="snapshot-grid">
+            <div class="snapshot-card">
+              <div class="snapshot-embed">
+                <iframe
+                  src="https://platform.twitter.com/embed/Tweet.html?id=2030386689043054876&theme=dark&dnt=true"
+                  title="bsmokes snapshot"
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                  allowfullscreen
+                ></iframe>
+              </div>
+              <div class="link-row" style="margin-top: 0.85rem;">
+                <a href="https://x.com/bsmokes/status/2030386689043054876?s=20" target="_blank" rel="noreferrer">Open on X</a>
+              </div>
+            </div>
+
+            <div class="snapshot-card">
+              <div class="snapshot-embed">
+                <iframe
+                  src="https://platform.twitter.com/embed/Tweet.html?id=1985185698815590523&theme=dark&dnt=true"
+                  title="arbalestpartner snapshot"
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                  allowfullscreen
+                ></iframe>
+              </div>
+              <div class="link-row" style="margin-top: 0.85rem;">
+                <a href="https://x.com/arbalestpartner/status/1985185698815590523?s=20" target="_blank" rel="noreferrer">Open on X</a>
+              </div>
+            </div>
+
+            <div class="snapshot-card">
+              <div class="snapshot-embed">
+                <iframe
+                  src="https://platform.twitter.com/embed/Tweet.html?id=1902888176936690171&theme=dark&dnt=true"
+                  title="egade snapshot"
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                  allowfullscreen
+                ></iframe>
+              </div>
+              <div class="link-row" style="margin-top: 0.85rem;">
+                <a href="https://x.com/egade/status/1902888176936690171?s=20" target="_blank" rel="noreferrer">Open on X</a>
+              </div>
+            </div>
+
+            <div class="snapshot-card">
+              <div class="snapshot-embed">
+                <iframe
+                  src="https://platform.twitter.com/embed/Tweet.html?id=1869774763834617993&theme=dark&dnt=true"
+                  title="arbalestpartner education snapshot"
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                  allowfullscreen
+                ></iframe>
+              </div>
+              <div class="link-row" style="margin-top: 0.85rem;">
+                <a href="https://x.com/arbalestpartner/status/1869774763834617993?s=20" target="_blank" rel="noreferrer">Open on X</a>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer class="panel footer">
+      <p>
+        <a class="ghost-button" href="https://piasahu.github.io/blockchain" target="_blank" rel="noreferrer" style="padding:0.9rem 1.1rem;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L19 6V14L12 18L5 14V6L12 2Z" stroke="#78E6FF" stroke-width="1.6"/>
+            <path d="M12 6L15.5 8V12L12 14L8.5 12V8L12 6Z" fill="#2BA7FF" fill-opacity="0.35" stroke="#CFEEFF" stroke-width="1.2"/>
+            <path d="M12 18V22M19 14L22 16M5 14L2 16" stroke="#78E6FF" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          <span>Also refer to https://piasahu.github.io/blockchain</span>
+        </a>
+      </p>
+      <div class="footer-links">
+        <a href="https://arbitrum.io/" target="_blank" rel="noreferrer">arbitrum.io</a>
+        <a href="https://blog.arbitrum.io/" target="_blank" rel="noreferrer">Blog</a>
+        <a href="https://x.com/arbitrum" target="_blank" rel="noreferrer">X</a>
+      </div>
+    </footer>
+  </div>
+
+  <script data-live="true">
+    const body = document.body;
+    const tabButtons = Array.from(document.querySelectorAll(".tab-button"));
+    const tabPanels = Array.from(document.querySelectorAll(".tab-panel"));
+    const langButtons = Array.from(document.querySelectorAll(".lang-btn"));
+    const jumpButtons = Array.from(document.querySelectorAll(".jump-button"));
+    const stackButtons = Array.from(document.querySelectorAll(".stack-option"));
+    const stackPanels = Array.from(document.querySelectorAll("[data-stack-panel]"));
+    const sectorButtons = Array.from(document.querySelectorAll(".sector-option"));
+    const sectorPanels = Array.from(document.querySelectorAll("[data-sector-panel]"));
+
+    function setLanguage(lang) {
+      body.dataset.lang = lang;
+      document.documentElement.lang = lang === "es" ? "es" : "en";
+      langButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.langChoice === lang);
+      });
+    }
+
+    function setTab(tabId) {
+      tabButtons.forEach((button) => {
+        const isActive = button.dataset.tab === tabId;
+        button.classList.toggle("active", isActive);
+        button.setAttribute("aria-selected", String(isActive));
+      });
+
+      tabPanels.forEach((panel) => {
+        panel.hidden = panel.id !== tabId;
+      });
+    }
+
+    function setStack(stackId) {
+      stackButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.stack === stackId);
+      });
+
+      stackPanels.forEach((panel) => {
+        panel.hidden = panel.dataset.stackPanel !== stackId;
+      });
+    }
+
+    function setSector(sectorId) {
+      sectorButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.sector === sectorId);
+      });
+
+      sectorPanels.forEach((panel) => {
+        panel.hidden = panel.dataset.sectorPanel !== sectorId;
+      });
+    }
+
+    langButtons.forEach((button) => {
+      button.addEventListener("click", () => setLanguage(button.dataset.langChoice));
+    });
+
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => setTab(button.dataset.tab));
+    });
+
+    jumpButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const target = button.dataset.jump;
+        setTab(target);
+        document.getElementById(target).scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+
+    stackButtons.forEach((button) => {
+      button.addEventListener("click", () => setStack(button.dataset.stack));
+    });
+
+    sectorButtons.forEach((button) => {
+      button.addEventListener("click", () => setSector(button.dataset.sector));
+    });
+
+    setLanguage("en");
+    setTab("overview");
+    setStack("one");
+    setSector("capital");
+  </script>
+</body>
+</html>
